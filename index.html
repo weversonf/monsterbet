@@ -346,38 +346,42 @@
 
 </div>
 
-<a class="admin-access" href="admin.html">
-  ⚡
-</a>
-
 <script src="common.js"></script>
 
 <script>
 
-  const API_URL = '/.netlify/functions/api';
+  // ⚠️ SUBSTITUA PELA URL DO SEU WEB APP DO GOOGLE APPS SCRIPT
+  const API_URL = 'https://script.google.com/macros/s/SEU_ID_AQUI/exec';
 
   let bets = [];
   let monsterCount = 0;
   let revealDate = null;
 
-  async function loadData(){
+  function loadData(){
 
     try{
 
-      const res = await fetch(API_URL);
-      const json = await res.json();
-
-      bets = json.bets || [];
-      monsterCount = Number(json.count) || 0;
-      revealDate = json.revealDate || null;
-
-      updateDisplay();
-      renderBets();
+      // Usa JSONP para contornar CORS no GitHub Pages
+      var script = document.createElement('script');
+      script.src = API_URL + '?callback=onDataLoaded';
+      script.onerror = function() {
+        console.error("Erro ao carregar dados da API");
+      };
+      document.head.appendChild(script);
 
     }catch(err){
       console.error("Erro ao carregar dados:", err);
     }
 
+  }
+
+  function onDataLoaded(json){
+    bets = json.bets || [];
+    monsterCount = Number(json.count) || 0;
+    revealDate = json.revealDate || null;
+
+    updateDisplay();
+    renderBets();
   }
 
   const countEl =
