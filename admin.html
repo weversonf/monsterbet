@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Monster Bet - Admin</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+
+    .container{
+      max-width:520px;
+    }
+
+    .back-link{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      color:#888;
+      text-decoration:none;
+      font-size:1rem;
+      margin-bottom:25px;
+      transition:.25s;
+    }
+
+    .back-link:hover{
+      color:var(--green2);
+    }
+
+    .modal-title{
+      color:var(--green2);
+      font-family:'Orbitron', sans-serif;
+      font-size:1.8rem;
+      margin-bottom:25px;
+      text-align:center;
+    }
+
+    .admin-bet-item{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:14px;
+      padding:14px;
+      margin-bottom:10px;
+    }
+
+    .admin-bet-item input{
+      margin-bottom:8px;
+    }
+
+    .admin-bet-actions{
+      display:flex;
+      gap:10px;
+    }
+
+    .admin-bet-actions button{
+      margin-top:0;
+      padding:12px;
+    }
+
+    .bets-list{
+      max-height:300px;
+      overflow:auto;
+      margin-top:20px;
+    }
+
+    .count-section{
+      text-align:center;
+      margin:25px 0;
+    }
+
+    .count-label{
+      color:#8d8d8d;
+      font-size:.95rem;
+      letter-spacing:2px;
+      margin-bottom:8px;
+    }
+
+    .count-value{
+      font-size:5rem;
+      font-family:'Orbitron',sans-serif;
+      color:var(--green2);
+      line-height:1;
+
+      text-shadow:
+        0 0 12px #39ff14,
+        0 0 30px rgba(57,255,20,.6);
+    }
+
+    .count-actions{
+      display:flex;
+      gap:10px;
+      margin-top:15px;
+    }
+
+    .count-actions button{
+      margin-top:0;
+      padding:14px;
+      font-size:.9rem;
+    }
+
+    .panel-hidden{
+      display:none;
+    }
+
+    @media(max-width:600px){
+
+      .modal-title{
+        font-size:1.4rem;
+      }
+
+      .count-value{
+        font-size:3.5rem;
+      }
+
+    }
+
+  </style>
+
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<div class="container">
+
+  <a class="back-link" href="index.html">
+    ← Voltar para Monster Bet
+  </a>
+
+  <!-- LOGIN -->
+
+  <div class="card" id="loginCard">
+
+    <div class="modal-title">
+      🔒 ÁREA ADMIN
+    </div>
+
+    <input
+      type="password"
+      id="adminToken"
+      placeholder="Token de admin"
+      onkeydown="if(event.key==='Enter') login()"
+    >
+
+    <button onclick="login()">
+      ENTRAR
+    </button>
+
+  </div>
+
+  <!-- ADMIN PANEL -->
+
+  <div class="card panel-hidden" id="adminCard">
+
+    <div class="modal-title">
+      ⚡ PAINEL ADMIN
+    </div>
+
+    <div class="count-section">
+
+      <div class="count-label">
+        TOTAL REAL
+      </div>
+
+      <div class="count-value" id="adminRealCount">
+        0
+      </div>
+
+      <div class="count-actions">
+
+        <button onclick="removeMonster()">
+          -1 MONSTER
+        </button>
+
+        <button onclick="addMonster()">
+          +1 MONSTER
+        </button>
+
+      </div>
+
+      <div style="margin-top:10px;">
+
+        <input
+          type="number"
+          id="manualCount"
+          placeholder="Ou definir número manual"
+          min="0"
+          style="text-align:center; margin-bottom:0;"
+        >
+
+        <button class="btn-secondary" onclick="setManualCount()">
+          DEFINIR
+        </button>
+
+      </div>
+
+    </div>
+
+    <hr class="divider">
+
+    <div class="count-label" style="margin-bottom:12px;">
+      DATA DE REVELAÇÃO
+    </div>
+
+    <input
+      type="datetime-local"
+      id="revealDate"
+      style="text-align:center;"
+    >
+
+    <button class="btn-secondary" onclick="saveRevealDate()">
+      SALVAR DATA
+    </button>
+
+    <div id="revealStatus" style="
+      text-align:center;
+      color:#888;
+      font-size:.9rem;
+      margin-top:10px;
+    "></div>
+
+    <hr class="divider">
+
+    <div class="count-label" style="margin-bottom:12px;">
+      ADICIONAR PALPITE
+    </div>
+
+    <input
+      type="text"
+      id="newName"
+      placeholder="Nome"
+    >
+
+    <input
+      type="number"
+      id="newGuess"
+      placeholder="Palpite"
+    >
+
+    <button onclick="addBet()">
+      ADICIONAR PALPITE
+    </button>
+
+    <div class="bets-list" id="adminBetsList"></div>
+
+    <hr class="divider">
+
+    <button class="btn-danger" onclick="resetAll()">
+      RESETAR TUDO
+    </button>
+
+    <button class="btn-secondary" onclick="logout()">
+      SAIR
+    </button>
+
+  </div>
+
+</div>
+
+<script src="common.js"></script>
+
+<script>
+
+  const API_URL = '/.netlify/functions/api';
+  const AUTH_KEY = 'monsterAdminToken';
+
+  let adminToken = sessionStorage.getItem(AUTH_KEY) || '';
+
+  let bets = [];
+  let monsterCount = 0;
+  let revealDate = null;
+
+  async function apiRequest(body){
+
+    const authHeader = `Bearer ${adminToken.trim()}`;
+    console.log('Enviando Authorization:', authHeader);
+
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authHeader
+      },
+      body: JSON.stringify(body)
+    });
+
+    const json = await res.json();
+    console.log('Resposta da API:', res.status, json);
+
+    if(!res.ok) throw new Error(json.error || `Erro ${res.status} na API`);
+
+    return json;
+
+  }
+
+  async function loadData(){
+
+    try{
+
+      const res = await fetch(API_URL);
+      const json = await res.json();
+
+      bets = json.bets || [];
+      monsterCount = Number(json.count) || 0;
+      revealDate = json.revealDate || null;
+
+      updateAdminCount();
+      loadRevealDate();
+      renderAdminBets();
+
+    }catch(err){
+
+      showToast('Erro ao carregar dados', true);
+      console.error(err);
+
+    }
+
+  }
+
+  function updateAdminCount(){
+
+    document.getElementById("adminRealCount")
+      .innerText = monsterCount;
+
+  }
+
+  function loadRevealDate(){
+
+    const input =
+      document.getElementById("revealDate");
+
+    const status =
+      document.getElementById("revealStatus");
+
+    if(revealDate){
+
+      input.value = revealDate.slice(0, 16);
+
+      const d = new Date(revealDate);
+      const now = new Date();
+
+      if(now >= d){
+
+        status.innerHTML =
+          '<span style="color:#39ff14;">✔ Resultado já revelado</span>';
+
+      }else{
+
+        status.innerHTML =
+          `Revela em: ${d.toLocaleString("pt-BR")}`;
+
+      }
+
+    }else{
+
+      input.value = "";
+      status.textContent = "Nenhuma data configurada";
+
+    }
+
+  }
+
+  async function saveRevealDate(){
+
+    const input =
+      document.getElementById("revealDate");
+
+    try{
+
+      const data = await apiRequest({
+        type: 'revealDate',
+        value: input.value || null
+      });
+
+      revealDate = data.revealDate;
+      loadRevealDate();
+      showToast("Data de revelação salva!");
+
+    }catch(err){
+
+      showToast(err.message, true);
+
+    }
+
+  }
+
+  function renderAdminBets(){
+
+    const container =
+      document.getElementById("adminBetsList");
+
+    container.innerHTML = "";
+
+    bets.forEach((bet,index) => {
+
+      const div =
+        document.createElement("div");
+
+      div.className = "admin-bet-item";
+
+      div.innerHTML = `
+
+        <input
+          type="text"
+          value="${bet.nome}"
+          id="name-${index}"
+        >
+
+        <input
+          type="number"
+          value="${bet.palpite}"
+          id="guess-${index}"
+        >
+
+        <div class="admin-bet-actions">
+
+          <button class="btn-secondary" onclick="saveBet(${index})">
+            SALVAR
+          </button>
+
+          <button class="btn-danger" onclick="deleteBet(${index})">
+            EXCLUIR
+          </button>
+
+        </div>
+
+      `;
+
+      container.appendChild(div);
+
+    });
+
+  }
+
+  function hasDuplicate(name){
+
+    return bets.some(
+      b => b.nome.toLowerCase() === name.toLowerCase()
+    );
+
+  }
+
+  async function addBet(){
+
+    const name =
+      document.getElementById("newName").value.trim();
+
+    const guess =
+      Number(
+        document.getElementById("newGuess").value
+      );
+
+    if(!name || !guess){
+
+      showToast("Preencha tudo.", true);
+
+      return;
+
+    }
+
+    try{
+
+      await apiRequest({
+        type: 'addBet',
+        nome: name,
+        palpite: guess
+      });
+
+      await loadData();
+
+      document.getElementById("newName").value = "";
+      document.getElementById("newGuess").value = "";
+
+      showToast("Palpite adicionado!");
+
+    }catch(err){
+
+      showToast(err.message, true);
+
+    }
+
+  }
+
+  async function saveBet(index){
+
+    const name =
+      document.getElementById(`name-${index}`).value.trim();
+
+    const guess =
+      Number(
+        document.getElementById(`guess-${index}`).value
+      );
+
+    if(!name || !guess){
+
+      showToast("Preencha tudo.", true);
+
+      return;
+
+    }
+
+    try{
+
+      await apiRequest({
+        type: 'saveBet',
+        index: index,
+        nome: name,
+        palpite: guess
+      });
+
+      await loadData();
+
+      showToast("Palpite salvo!");
+
+    }catch(err){
+
+      showToast(err.message, true);
+
+    }
+
+  }
+
+  async function deleteBet(index){
+
+    if(confirm("Excluir palpite?")){
+
+      try{
+
+        await apiRequest({
+          type: 'deleteBet',
+          index: index
+        });
+
+        await loadData();
+
+        showToast("Palpite excluído.");
+
+      }catch(err){
+
+        showToast(err.message, true);
+
+      }
+
+    }
+
+  }
+
+  function saveBets(){
+
+    renderAdminBets();
+
+  }
+
+  async function login(){
+
+    const token =
+      document.getElementById("adminToken").value.trim();
+
+    if(!token){
+
+      showToast("Digite o token de admin.", true);
+
+      return;
+
+    }
+
+    adminToken = token.trim();
+
+    try{
+
+      await apiRequest({ type: 'validate' });
+
+      sessionStorage.setItem(AUTH_KEY, adminToken);
+
+      showPanel();
+
+    }catch(err){
+
+      adminToken = '';
+      showToast("Token inválido: " + err.message, true);
+      console.error('Erro no login:', err);
+
+    }
+
+  }
+
+  function logout(){
+
+    sessionStorage.removeItem(AUTH_KEY);
+    adminToken = '';
+
+    document.getElementById("adminCard")
+      .classList.add("panel-hidden");
+
+    document.getElementById("loginCard")
+      .style.display = "";
+
+    document.getElementById("adminToken").value = "";
+
+  }
+
+  async function showPanel(){
+
+    document.getElementById("loginCard")
+      .style.display = "none";
+
+    document.getElementById("adminCard")
+      .classList.remove("panel-hidden");
+
+    await loadData();
+
+  }
+
+  async function addMonster(){
+
+    try{
+
+      const data = await apiRequest({
+        type: 'count',
+        value: monsterCount + 1
+      });
+
+      monsterCount = data.count;
+      updateAdminCount();
+      showToast("+1 Monster");
+
+    }catch(err){
+
+      showToast(err.message, true);
+
+    }
+
+  }
+
+  async function removeMonster(){
+
+    if(monsterCount > 0){
+
+      try{
+
+        const data = await apiRequest({
+          type: 'count',
+          value: monsterCount - 1
+        });
+
+        monsterCount = data.count;
+        updateAdminCount();
+        showToast("-1 Monster");
+
+      }catch(err){
+
+        showToast(err.message, true);
+
+      }
+
+    }
+
+  }
+
+  async function setManualCount(){
+
+    const input =
+      document.getElementById("manualCount");
+
+    const val = Number(input.value);
+
+    if(isNaN(val) || val < 0){
+
+      showToast("Número inválido.", true);
+
+      return;
+
+    }
+
+    try{
+
+      const data = await apiRequest({
+        type: 'count',
+        value: val
+      });
+
+      monsterCount = data.count;
+      updateAdminCount();
+
+      input.value = "";
+
+      showToast("Contador atualizado!");
+
+    }catch(err){
+
+      showToast(err.message, true);
+
+    }
+
+  }
+
+  async function resetAll(){
+
+    if(confirm("Resetar tudo?")){
+
+      try{
+
+        await apiRequest({ type: 'reset' });
+        await loadData();
+
+        showToast("Tudo resetado.");
+
+      }catch(err){
+
+        showToast(err.message, true);
+
+      }
+
+    }
+
+  }
+
+  function saveData(){
+
+    updateAdminCount();
+    renderAdminBets();
+
+  }
+
+  createParticles();
+
+  if(adminToken){
+
+    showPanel();
+
+  }
+
+</script>
+
+</body>
+</html>

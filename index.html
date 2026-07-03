@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Monster Bet ⚡</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+
+    .hero{
+      text-align:center;
+      margin-bottom:30px;
+    }
+
+    .monster-logo{
+      width:220px;
+      margin-bottom:10px;
+
+      filter:
+        drop-shadow(0 0 15px rgba(57,255,20,.7))
+        drop-shadow(0 0 35px rgba(57,255,20,.5));
+
+      animation:logoFloat 4s infinite ease-in-out;
+    }
+
+    @keyframes logoFloat{
+
+      0%{
+        transform:translateY(0px);
+      }
+
+      50%{
+        transform:translateY(-10px);
+      }
+
+      100%{
+        transform:translateY(0px);
+      }
+
+    }
+
+    .title{
+      font-family:'Orbitron', sans-serif;
+      font-size:5rem;
+      font-weight:900;
+      color:var(--green2);
+      letter-spacing:6px;
+
+      text-shadow:
+        0 0 10px var(--green2),
+        0 0 30px var(--green2),
+        0 0 60px rgba(57,255,20,.6);
+    }
+
+    .subtitle{
+      margin-top:10px;
+      color:#b8b8b8;
+      font-size:1.3rem;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:25px;
+    }
+
+    .counter-label{
+      color:#cfcfcf;
+      letter-spacing:3px;
+      font-size:1rem;
+      margin-bottom:15px;
+    }
+
+    .counter{
+      font-size:9rem;
+      font-family:'Orbitron', sans-serif;
+      font-weight:900;
+      line-height:1;
+      color:var(--green2);
+
+      text-shadow:
+        0 0 15px var(--green2),
+        0 0 40px rgba(57,255,20,.8);
+    }
+
+    .status{
+      margin-top:18px;
+      color:#9f9f9f;
+      font-size:1.05rem;
+    }
+
+    .rules p{
+      color:#d8d8d8;
+      margin-bottom:14px;
+      line-height:1.7;
+      font-size:1.08rem;
+    }
+
+    .bets{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .bet-item{
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;
+      padding:18px 20px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      transition:.25s;
+    }
+
+    .bet-item:hover{
+      transform:translateX(6px);
+      border-color:rgba(57,255,20,.35);
+      background:rgba(57,255,20,.05);
+    }
+
+    .bet-name{
+      font-size:1.2rem;
+      font-weight:700;
+    }
+
+    .bet-value{
+      font-family:'Orbitron', sans-serif;
+      color:var(--green2);
+      font-size:1.4rem;
+    }
+
+    .winner{
+      background:rgba(57,255,20,.12);
+      border:2px solid var(--green2);
+      box-shadow:0 0 30px rgba(57,255,20,.2);
+    }
+
+    .reveal{
+      margin-top:25px;
+      display:none;
+      text-align:center;
+    }
+
+    .result-box{
+      background:linear-gradient(180deg,#101010,#050505);
+      border:2px solid var(--green2);
+      border-radius:30px;
+      padding:35px;
+
+      box-shadow:
+        0 0 45px rgba(57,255,20,.25);
+    }
+
+    .result-box h2{
+      font-family:'Orbitron', sans-serif;
+      color:var(--green2);
+      font-size:2.3rem;
+      margin-bottom:20px;
+    }
+
+    .final-number{
+      font-size:6rem;
+      font-family:'Orbitron', sans-serif;
+      color:white;
+      margin-bottom:20px;
+    }
+
+    .winner-text{
+      font-size:1.25rem;
+      color:#d6d6d6;
+      line-height:1.8;
+    }
+
+    .admin-access{
+      position:fixed;
+      right:20px;
+      bottom:20px;
+      width:58px;
+      height:58px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:1.6rem;
+      text-decoration:none;
+      z-index:99999;
+
+      background:
+        linear-gradient(180deg,#39ff14,#7CFC00);
+
+      color:black;
+
+      box-shadow:
+        0 0 15px rgba(57,255,20,.5),
+        0 0 35px rgba(57,255,20,.3);
+
+      transition:.25s;
+    }
+
+    .admin-access:hover{
+      transform:scale(1.1);
+    }
+
+    @media(max-width:900px){
+
+      .title{
+        font-size:3rem;
+      }
+
+      .counter{
+        font-size:6rem;
+      }
+
+      .monster-logo{
+        width:170px;
+      }
+
+    }
+
+  </style>
+
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<div class="container">
+
+  <div class="hero">
+
+    <img
+      class="monster-logo"
+      src="https://upload.wikimedia.org/wikipedia/commons/d/d4/Logo_Monster_Energy.webp"
+      alt="Monster"
+    >
+
+    <h1 class="title">
+      MONSTER BET
+    </h1>
+
+    <p class="subtitle">
+      Quantos Monsters o Wevs vai tomar em Maio?
+    </p>
+
+  </div>
+
+  <div class="grid">
+
+    <div>
+
+      <div class="card" id="countCard" style="display:none;">
+
+        <div class="counter-label">
+          ⚡ MONSTERS CONSUMIDOS
+        </div>
+
+        <div class="counter" id="monsterCount">
+          0
+        </div>
+
+        <div class="status" id="revealStatus">
+          Resultado revelado em 29/05 às 15h.
+        </div>
+
+      </div>
+
+      <div class="card">
+
+        <h2 class="section-title">
+          📜 REGRAS
+        </h2>
+
+        <div class="rules">
+
+          <p>
+            ✅ Se alguém acertar exatamente:
+            todo mundo divide uma Coca-Cola 2L pro vencedor.
+          </p>
+
+          <p>
+            ❌ Se ninguém acertar:
+            todo mundo paga um Monster pro Wevs.
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div>
+
+      <div class="card">
+
+        <h2 class="section-title">
+          🎯 PALPITES
+        </h2>
+
+        <div class="bets" id="betsList"></div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="reveal" id="revealBox">
+
+    <div class="result-box">
+
+      <h2>
+        ⚡ RESULTADO FINAL ⚡
+      </h2>
+
+      <div class="final-number" id="finalValue">
+        0
+      </div>
+
+      <div class="winner-text" id="winnerText"></div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<a class="admin-access" href="admin.html">
+  ⚡
+</a>
+
+<script src="common.js"></script>
+
+<script>
+
+  const API_URL = '/.netlify/functions/api';
+
+  let bets = [];
+  let monsterCount = 0;
+  let revealDate = null;
+
+  async function loadData(){
+
+    try{
+
+      const res = await fetch(API_URL);
+      const json = await res.json();
+
+      bets = json.bets || [];
+      monsterCount = Number(json.count) || 0;
+      revealDate = json.revealDate || null;
+
+      updateDisplay();
+      renderBets();
+
+    }catch(err){
+      console.error("Erro ao carregar dados:", err);
+    }
+
+  }
+
+  const countEl =
+    document.getElementById("monsterCount");
+
+  const countCard =
+    document.getElementById("countCard");
+
+  const betsList =
+    document.getElementById("betsList");
+
+  const revealBox =
+    document.getElementById("revealBox");
+
+  const finalValue =
+    document.getElementById("finalValue");
+
+  const winnerText =
+    document.getElementById("winnerText");
+
+  const revealStatusEl =
+    document.getElementById("revealStatus");
+
+  function getRevealDate(){
+
+    if(revealDate){
+
+      return new Date(revealDate);
+
+    }
+
+    return new Date("2099-01-01T00:00:00");
+
+  }
+
+  function revealed(){
+
+    return new Date() >= getRevealDate();
+
+  }
+
+  function updateDisplay(){
+
+    if(revealed()){
+
+      countCard.style.display = "";
+      countEl.innerText = monsterCount;
+
+      const d = getRevealDate();
+      revealStatusEl.innerText =
+        `Revelado em ${d.toLocaleDateString("pt-BR")} às ${d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}`;
+
+    }
+
+  }
+
+  function renderBets(){
+
+    betsList.innerHTML = "";
+
+    bets.forEach((bet) => {
+
+      const div =
+        document.createElement("div");
+
+      div.className = "bet-item";
+
+      if(
+        revealed()
+        &&
+        bet.palpite === monsterCount
+      ){
+        div.classList.add("winner");
+      }
+
+      div.innerHTML = `
+        <div class="bet-name">
+          ${bet.nome}
+        </div>
+
+        <div class="bet-value">
+          ${bet.palpite}
+        </div>
+      `;
+
+      betsList.appendChild(div);
+
+    });
+
+    if(revealed()){
+
+      revealBox.style.display = "block";
+
+      finalValue.innerText = monsterCount;
+
+      const winners =
+        bets.filter(
+          b => b.palpite === monsterCount
+        );
+
+      if(winners.length > 0){
+
+        winnerText.innerHTML = `
+          🏆 Vencedor(es):<br><br>
+
+          ${winners.map(w =>
+            `<strong>${w.nome}</strong>`
+          ).join("<br>")}
+
+          <br><br>
+
+          Agora todo mundo divide uma Coca-Cola 2L 😎
+        `;
+
+      }else{
+
+        winnerText.innerHTML = `
+          😈 Ninguém acertou.<br><br>
+
+          Agora todo mundo vai pagar
+          um Monster pro Wevs.
+        `;
+
+      }
+
+    }
+
+  }
+
+  createParticles();
+
+  loadData();
+
+</script>
+
+</body>
+</html>
