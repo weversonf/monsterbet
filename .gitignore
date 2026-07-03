@@ -1,0 +1,25 @@
+# Dependências
+node_modules/
+
+# Cache e build do Netlify local
+.netlify/
+
+# Arquivos de deploy gerados
+deploy.zip
+deploy_fixed.zip
+deploy_v3.zip
+
+# Ambiente
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Páginas não usadas no deploy minimal
+admin.html
+debug.html
