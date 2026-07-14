@@ -12,13 +12,14 @@ var SHEET_NAME = "MonsterBet";
 var DEFAULT_DATA = {
   count: 0,
   bets: [
-    { nome: "Augusto", palpite: 26 },
-    { nome: "Guilherme", palpite: 23 },
-    { nome: "Alexandre", palpite: 22 },
-    { nome: "Roberto", palpite: 28 },
-    { nome: "Hamanda", palpite: 24 }
+    { nome: "Augusto", palpite: 26, senha: null },
+    { nome: "Guilherme", palpite: 23, senha: null },
+    { nome: "Alexandre", palpite: 22, senha: null },
+    { nome: "Roberto", palpite: 28, senha: null },
+    { nome: "Hamanda", palpite: 24, senha: null }
   ],
-  revealDate: null
+  revealDate: null,
+  password: "Wf@023240#"
 };
 
 // --- PLANILHA ---
@@ -45,8 +46,11 @@ function loadData() {
     var parsed = JSON.parse(raw);
     // Garante que os campos existam
     parsed.count = parsed.count || 0;
-    parsed.bets = parsed.bets || [];
+    parsed.bets = (parsed.bets || []).map(function(b) {
+      return { nome: b.nome, palpite: b.palpite, senha: b.senha || null };
+    });
     parsed.revealDate = parsed.revealDate || null;
+    parsed.password = parsed.password || DEFAULT_DATA.password;
     return parsed;
   } catch (e) {
     saveData(DEFAULT_DATA);
@@ -142,10 +146,11 @@ function doPost(e) {
           "⚡ *Comandos Monster Bet*\n\n" +
           "/atualizarcontador 15 — Define o contador total\n" +
           "/addmonster 1 — Adiciona ao contador\n" +
-          "/addbet Weverson 25 — Adiciona palpite\n" +
+          "/addbet Weverson 25 — Adiciona palpite (admin, sem senha)\n" +
           "/removebet Weverson — Remove palpite\n" +
           "/definirdata 2025-05-29T15:00 — Define data de revelação\n" +
           "/revelaragora — Revela resultado agora\n" +
+          "/definirsenha monkey123 — Define a senha de revelação\n" +
           "/reset — Reseta tudo\n" +
           "/status — Mostra status atual\n" +
           "/ajuda — Mostra esta mensagem"
@@ -185,7 +190,7 @@ function doPost(e) {
           if (data.bets.some(function(b) { return b.nome.toLowerCase() === lower; })) {
             sendMessage(chatId, "❌ Já existe palpite para " + nome);
           } else {
-            data.bets.push({ nome: nome, palpite: palpite });
+            data.bets.push({ nome: nome, palpite: palpite, senha: null });
             saveData(data);
             sendMessage(chatId, "✅ Palpite adicionado: " + nome + " → " + palpite);
           }
@@ -231,12 +236,23 @@ function doPost(e) {
         sendMessage(chatId, "✅ Resultado revelado agora!\n\n" + formatData(data));
         break;
 
+      case "/definirsenha":
+        if (parts.length < 2) {
+          sendMessage(chatId, "❌ Use: /definirsenha <nova_senha>");
+          break;
+        }
+        data.password = parts.slice(1).join(" ");
+        saveData(data);
+        sendMessage(chatId, "✅ Senha definida com sucesso.");
+        break;
+
       case "/reset":
         data.count = 0;
         data.bets = [];
         data.revealDate = null;
+        // mantém a senha admin
         saveData(data);
-        sendMessage(chatId, "✅ Tudo resetado.");
+        sendMessage(chatId, "✅ Tudo resetado (senha mantida).");
         break;
 
       case "/status":
@@ -255,18 +271,82 @@ function doPost(e) {
 
 // --- API PARA O SITE ---
 function doGet(e) {
-  var data = loadData();
-  var json = JSON.stringify(data);
-
-  // Suporte a JSONP (para GitHub Pages)
+  var action = e.parameter.action;
   var callback = e.parameter.callback;
+  var data = loadData();
+
+  if (action === 'addmonster') {
+    if (e.parameter.password !== data.password) {
+      return jsonpResponse({ success: false, error: 'Senha incorreta' }, callback);
+    }
+    data.count = (data.count || 0) + 1;
+    saveData(data);
+    return jsonpResponse({ success: true, count: data.count }, callback);
+  }
+
+  if (action === 'validate') {
+    var valid = (e.parameter.password === data.password);
+    var deadlinePassed = data.revealDate && new Date() >= new Date(data.revealDate);
+    return jsonpResponse({ valid: valid, deadlinePassed: deadlinePassed }, callback);
+  }
+
+  if (action === 'register') {
+    var nome = (e.parameter.nome || '').trim();
+    var palpite = Number(e.parameter.palpite);
+    var senha = (e.parameter.senha || '').trim();
+
+    if (!nome || isNaN(palpite) || palpite < 0 || !senha) {
+      return jsonpResponse({ success: false, error: 'Preencha todos os campos corretamente.' }, callback);
+    }
+
+    var lowerName = nome.toLowerCase();
+    if (data.bets.some(function(b) { return b.nome.toLowerCase() === lowerName; })) {
+      return jsonpResponse({ success: false, error: 'Já existe um palpite com esse nome.' }, callback);
+    }
+
+    data.bets.push({ nome: nome, palpite: palpite, senha: senha });
+    saveData(data);
+    return jsonpResponse({ success: true, nome: nome, palpite: palpite }, callback);
+  }
+
+  if (action === 'mybet') {
+    var nome = (e.parameter.nome || '').trim();
+    var senha = (e.parameter.senha || '').trim();
+
+    var bet = data.bets.find(function(b) {
+      return b.nome.toLowerCase() === nome.toLowerCase();
+    });
+
+    if (!bet || bet.senha !== senha) {
+      return jsonpResponse({ found: false }, callback);
+    }
+
+    return jsonpResponse({ found: true, nome: bet.nome, palpite: bet.palpite }, callback);
+  }
+
+  var publicData = {
+    count: data.count,
+    bets: data.bets.map(function(b) { return { nome: b.nome, palpite: b.palpite }; }),
+    revealDate: data.revealDate
+  };
+
+  var json = JSON.stringify(publicData);
+
   if (callback) {
-    var output = callback + "(" + json + ");";
-    return ContentService.createTextOutput(output)
+    return ContentService.createTextOutput(callback + "(" + json + ");")
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
 
-  // Resposta JSON com CORS
+  return ContentService.createTextOutput(json)
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function jsonpResponse(obj, callback) {
+  var json = JSON.stringify(obj);
+  if (callback) {
+    return ContentService.createTextOutput(callback + "(" + json + ");")
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
   return ContentService.createTextOutput(json)
     .setMimeType(ContentService.MimeType.JSON);
 }

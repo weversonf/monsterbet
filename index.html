@@ -315,10 +315,63 @@
       <div class="card">
 
         <h2 class="section-title">
+          📝 FAÇA SEU PALPITE
+        </h2>
+
+        <input type="text" id="regNome" placeholder="Seu nome...">
+        <input type="number" id="regPalpite" placeholder="Seu palpite (número)...">
+        <input type="password" id="regSenha" placeholder="Crie uma senha...">
+
+        <button onclick="registerBet()">REGISTRAR PALPITE</button>
+
+        <p id="regStatus" style="margin-top:12px;"></p>
+
+      </div>
+
+      <div class="card">
+
+        <h2 class="section-title">
           🎯 PALPITES
         </h2>
 
         <div class="bets" id="betsList"></div>
+
+      </div>
+
+      <div class="card">
+
+        <h2 class="section-title">
+          🔍 VER MEU PALPITE
+        </h2>
+
+        <p style="color:#9f9f9f;margin-bottom:15px;font-size:1.02rem;">
+          Já se cadastrou? Digite seu nome e senha para ver seu palpite.
+        </p>
+
+        <input type="text" id="myNome" placeholder="Seu nome...">
+        <input type="password" id="mySenha" placeholder="Sua senha...">
+
+        <button onclick="checkMyBet()">VER MEU PALPITE</button>
+
+        <p id="myStatus" style="margin-top:12px;"></p>
+
+      </div>
+
+      <div class="card" id="passwordCard" style="display:none;margin-top:25px;">
+
+        <h2 class="section-title">
+          🔐 REVELAR RESULTADOS
+        </h2>
+
+        <p style="color:#9f9f9f;margin-bottom:15px;font-size:1.05rem;">
+          O prazo já passou! Digite a senha para ver os palpites e o resultado final.
+        </p>
+
+        <input type="password" id="revealPassInput" placeholder="Senha...">
+
+        <button onclick="submitPassword()">REVELAR</button>
+
+        <p id="passStatus" style="margin-top:12px;"></p>
 
       </div>
 
@@ -344,6 +397,31 @@
 
   </div>
 
+</div>
+
+<a class="admin-access" href="javascript:void(0)" onclick="openAdmin()" title="Painel Admin">⚡</a>
+
+<div class="admin-modal" id="adminModal">
+  <div class="admin-modal-content">
+    <span class="admin-close" onclick="closeAdmin()">&times;</span>
+    <h2 class="section-title" style="margin-bottom:20px;">⚡ PAINEL ADMIN</h2>
+
+    <div id="adminLogin">
+      <input type="password" id="adminPassInput" placeholder="Senha admin...">
+      <button onclick="adminLogin()">ENTRAR</button>
+      <p id="adminLoginStatus" style="margin-top:10px;"></p>
+    </div>
+
+    <div id="adminPanel" style="display:none;">
+      <p style="font-size:1.1rem;margin-bottom:14px;">
+        🥤 Monsters consumidos:
+        <strong id="adminCountDisplay" style="color:var(--green2);font-family:'Orbitron',sans-serif;font-size:1.8rem;">0</strong>
+      </p>
+      <button onclick="addOneMonster()">+1 MONSTER</button>
+      <button class="btn-secondary" onclick="refreshAll()">ATUALIZAR</button>
+      <p id="adminPanelStatus" style="margin-top:12px;"></p>
+    </div>
+  </div>
 </div>
 
 <script src="common.js"></script>
@@ -380,8 +458,19 @@
     monsterCount = Number(json.count) || 0;
     revealDate = json.revealDate || null;
 
+    if (sessionStorage.getItem('monster_unlocked') === 'true' && !revealed()) {
+      sessionStorage.removeItem('monster_unlocked');
+    }
+
     updateDisplay();
     renderBets();
+
+    var passCard = document.getElementById('passwordCard');
+    if (revealed() && !isUnlocked()) {
+      passCard.style.display = '';
+    } else {
+      passCard.style.display = 'none';
+    }
   }
 
   const countEl =
@@ -425,7 +514,7 @@
 
   function updateDisplay(){
 
-    if(revealed()){
+    if(isUnlocked()){
 
       countCard.style.display = "";
       countEl.innerText = monsterCount;
@@ -442,6 +531,8 @@
 
     betsList.innerHTML = "";
 
+    var unlocked = isUnlocked();
+
     bets.forEach((bet) => {
 
       const div =
@@ -450,12 +541,14 @@
       div.className = "bet-item";
 
       if(
-        revealed()
+        unlocked
         &&
         bet.palpite === monsterCount
       ){
         div.classList.add("winner");
       }
+
+      var showValue = unlocked || (sessionStorage.getItem('mybet_' + bet.nome) !== null);
 
       div.innerHTML = `
         <div class="bet-name">
@@ -463,7 +556,7 @@
         </div>
 
         <div class="bet-value">
-          ${bet.palpite}
+          ${showValue ? bet.palpite : '???'}
         </div>
       `;
 
@@ -471,7 +564,7 @@
 
     });
 
-    if(revealed()){
+    if(unlocked){
 
       revealBox.style.display = "block";
 
@@ -510,6 +603,223 @@
     }
 
   }
+
+  // ============ REVEAL / ADMIN ============
+
+  var adminPass = null;
+
+  function isUnlocked(){
+    return sessionStorage.getItem('monster_unlocked') === 'true' && revealed();
+  }
+
+  function submitPassword(){
+    var pass = document.getElementById('revealPassInput').value.trim();
+    if(!pass) return;
+
+    jsonpCall(
+      API_URL + '?action=validate&password=' + encodeURIComponent(pass) + '&callback=onPassResult'
+    );
+  }
+
+  function onPassResult(data){
+    var statusEl = document.getElementById('passStatus');
+    if(data.valid){
+      if(data.deadlinePassed){
+        sessionStorage.setItem('monster_unlocked', 'true');
+        updateDisplay();
+        renderBets();
+        document.getElementById('passwordCard').style.display = 'none';
+      }else{
+        statusEl.style.color = '#ff6b6b';
+        statusEl.textContent = 'A data de revelação ainda não chegou.';
+      }
+    }else{
+      statusEl.style.color = '#ff6b6b';
+      statusEl.textContent = 'Senha incorreta.';
+    }
+  }
+
+  function openAdmin(){
+    document.getElementById('adminModal').classList.add('show');
+    document.getElementById('adminLogin').style.display = 'block';
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('adminPassInput').value = '';
+    document.getElementById('adminLoginStatus').textContent = '';
+  }
+
+  function closeAdmin(){
+    document.getElementById('adminModal').classList.remove('show');
+  }
+
+  function adminLogin(){
+    var pass = document.getElementById('adminPassInput').value.trim();
+    if(!pass) return;
+
+    jsonpCall(
+      API_URL + '?action=validate&password=' + encodeURIComponent(pass) + '&callback=onAdminLoginResult'
+    );
+  }
+
+  function onAdminLoginResult(data){
+    var statusEl = document.getElementById('adminLoginStatus');
+    if(data.valid){
+      adminPass = document.getElementById('adminPassInput').value.trim();
+      document.getElementById('adminLogin').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'block';
+      document.getElementById('adminCountDisplay').textContent = monsterCount;
+
+      if(data.deadlinePassed){
+        sessionStorage.setItem('monster_unlocked', 'true');
+        updateDisplay();
+        renderBets();
+        document.getElementById('passwordCard').style.display = 'none';
+      }
+    }else{
+      statusEl.style.color = '#ff6b6b';
+      statusEl.textContent = 'Senha incorreta.';
+    }
+  }
+
+  function addOneMonster(){
+    if(!adminPass){
+      showToast('Faça login no painel admin primeiro.', true);
+      return;
+    }
+
+    document.getElementById('adminPanelStatus').textContent = 'Adicionando...';
+
+    jsonpCall(
+      API_URL + '?action=addmonster&password=' + encodeURIComponent(adminPass) + '&callback=onMonsterAdded'
+    );
+  }
+
+  function onMonsterAdded(data){
+    var statusEl = document.getElementById('adminPanelStatus');
+
+    if(data.success){
+      monsterCount = data.count;
+
+      if(isUnlocked()){
+        updateDisplay();
+        renderBets();
+      }
+
+      document.getElementById('adminCountDisplay').textContent = data.count;
+      statusEl.style.color = 'var(--green2)';
+      statusEl.textContent = '+1 Monster! Total: ' + data.count;
+      showToast('+1 Monster! Total: ' + data.count);
+    }else{
+      statusEl.style.color = '#ff6b6b';
+      statusEl.textContent = 'Erro: ' + (data.error || 'desconhecido');
+    }
+  }
+
+  function refreshAll(){
+    loadData();
+    document.getElementById('adminCountDisplay').textContent = monsterCount;
+    document.getElementById('adminPanelStatus').textContent = 'Atualizado.';
+  }
+
+  function jsonpCall(url){
+    var script = document.createElement('script');
+    script.src = url;
+    script.onerror = function(){
+      console.error('Erro na chamada JSONP:', url);
+    };
+    document.head.appendChild(script);
+    setTimeout(function(){ script.remove(); }, 8000);
+  }
+
+  function registerBet(){
+    var nome = document.getElementById('regNome').value.trim();
+    var palpite = document.getElementById('regPalpite').value.trim();
+    var senha = document.getElementById('regSenha').value.trim();
+    var statusEl = document.getElementById('regStatus');
+
+    if(!nome || !palpite || !senha){
+      statusEl.style.color = '#ff6b6b';
+      statusEl.textContent = 'Preencha todos os campos.';
+      return;
+    }
+
+    if(isNaN(Number(palpite)) || Number(palpite) < 0){
+      statusEl.style.color = '#ff6b6b';
+      statusEl.textContent = 'O palpite deve ser um número válido.';
+      return;
+    }
+
+    statusEl.style.color = '#9f9f9f';
+    statusEl.textContent = 'Registrando...';
+
+    jsonpCall(
+      API_URL + '?action=register&nome=' + encodeURIComponent(nome) +
+      '&palpite=' + encodeURIComponent(palpite) +
+      '&senha=' + encodeURIComponent(senha) +
+      '&callback=onRegisterResult'
+    );
+  }
+
+  function onRegisterResult(data){
+    var statusEl = document.getElementById('regStatus');
+
+    if(data.success){
+      statusEl.style.color = 'var(--green2)';
+      statusEl.textContent = 'Palpite registrado! Anote sua senha para consultar depois.';
+
+      document.getElementById('regNome').value = '';
+      document.getElementById('regPalpite').value = '';
+      document.getElementById('regSenha').value = '';
+
+      // Mostra o palpite na lista automaticamente
+      sessionStorage.setItem('mybet_' + data.nome, data.palpite);
+
+      // Recarrega os dados
+      loadData();
+    }else{
+      statusEl.style.color = '#ff6b6b';
+      statusEl.textContent = data.error || 'Erro ao registrar.';
+    }
+  }
+
+  function checkMyBet(){
+    var nome = document.getElementById('myNome').value.trim();
+    var senha = document.getElementById('mySenha').value.trim();
+    var statusEl = document.getElementById('myStatus');
+
+    if(!nome || !senha){
+      statusEl.style.color = '#ff6b6b';
+      statusEl.textContent = 'Preencha nome e senha.';
+      return;
+    }
+
+    statusEl.style.color = '#9f9f9f';
+    statusEl.textContent = 'Consultando...';
+
+    jsonpCall(
+      API_URL + '?action=mybet&nome=' + encodeURIComponent(nome) +
+      '&senha=' + encodeURIComponent(senha) +
+      '&callback=onMyBetResult'
+    );
+  }
+
+  function onMyBetResult(data){
+    var statusEl = document.getElementById('myStatus');
+
+    if(data.found){
+      statusEl.style.color = 'var(--green2)';
+      statusEl.textContent = 'Seu palpite: ' + data.palpite;
+
+      sessionStorage.setItem('mybet_' + data.nome, data.palpite);
+      renderBets();
+
+      document.getElementById('mySenha').value = '';
+    }else{
+      statusEl.style.color = '#ff6b6b';
+      statusEl.textContent = 'Nome ou senha incorretos.';
+    }
+  }
+
+  // ==========================================
 
   createParticles();
 
