@@ -271,7 +271,7 @@ function doPost(e) {
 
 // --- API PARA O SITE ---
 function doGet(e) {
-  var action = e.parameter.action;
+  var action = e.parameter.cmd;
   var callback = e.parameter.callback;
   var data = loadData();
 

@@ -617,7 +617,7 @@
     if(!pass) return;
 
     jsonpCall(
-      API_URL + '?action=validate&password=' + encodeURIComponent(pass) + '&callback=onPassResult'
+      API_URL + '?cmd=validate&password=' + encodeURIComponent(pass) + '&callback=onPassResult'
     );
   }
 
@@ -656,7 +656,7 @@
     if(!pass) return;
 
     jsonpCall(
-      API_URL + '?action=validate&password=' + encodeURIComponent(pass) + '&callback=onAdminLoginResult'
+      API_URL + '?cmd=validate&password=' + encodeURIComponent(pass) + '&callback=onAdminLoginResult'
     );
   }
 
@@ -689,7 +689,7 @@
     document.getElementById('adminPanelStatus').textContent = 'Adicionando...';
 
     jsonpCall(
-      API_URL + '?action=addmonster&password=' + encodeURIComponent(adminPass) + '&callback=onMonsterAdded'
+      API_URL + '?cmd=addmonster&password=' + encodeURIComponent(adminPass) + '&callback=onMonsterAdded'
     );
   }
 
@@ -752,7 +752,7 @@
     statusEl.textContent = 'Registrando...';
 
     jsonpCall(
-      API_URL + '?action=register&nome=' + encodeURIComponent(nome) +
+      API_URL + '?cmd=register&nome=' + encodeURIComponent(nome) +
       '&palpite=' + encodeURIComponent(palpite) +
       '&senha=' + encodeURIComponent(senha) +
       '&callback=onRegisterResult'
@@ -796,7 +796,7 @@
     statusEl.textContent = 'Consultando...';
 
     jsonpCall(
-      API_URL + '?action=mybet&nome=' + encodeURIComponent(nome) +
+      API_URL + '?cmd=mybet&nome=' + encodeURIComponent(nome) +
       '&senha=' + encodeURIComponent(senha) +
       '&callback=onMyBetResult'
     );
